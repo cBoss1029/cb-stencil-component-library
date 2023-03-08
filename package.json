@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "build": "stencil build --docs",
+    "build.watch": "stencil build --dev --watch",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll",
@@ -40,8 +41,10 @@
     "@storybook/html": "^6.5.16",
     "@storybook/manager-webpack4": "^6.5.16",
     "@storybook/testing-library": "^0.0.13",
+    "@types/babel__generator": "^7.6.4",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.11",
+    "@types/react": "^18.0.28",
     "babel-loader": "^8.3.0",
     "jest": "^27.5.1",
     "jest-cli": "^27.5.1",

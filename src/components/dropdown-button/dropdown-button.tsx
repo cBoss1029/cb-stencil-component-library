@@ -1,5 +1,7 @@
 import { Component, Host, h } from '@stencil/core';
 
+export interface DropdownButtonProps {}
+
 @Component({
   tag: 'dropdown-button',
   styleUrl: 'dropdown-button.css',
