@@ -5,8 +5,11 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
+import { DropdownOption } from "./components/dropdown-button/dropdown-button";
+export { DropdownOption } from "./components/dropdown-button/dropdown-button";
 export namespace Components {
     interface DropdownButton {
+        "options": DropdownOption[] | string;
     }
     interface MyComponent {
         /**
@@ -43,6 +46,7 @@ declare global {
 }
 declare namespace LocalJSX {
     interface DropdownButton {
+        "options"?: DropdownOption[] | string;
     }
     interface MyComponent {
         /**

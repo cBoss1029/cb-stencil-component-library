@@ -1,6 +1,13 @@
-import { Component, Host, h } from '@stencil/core';
+import { Component, Host, h, Prop, Watch } from '@stencil/core';
 
+export type DropdownOption = {
+  label: string;
+  value?: string;
+  href?: string;
+  children?: DropdownOption[];
+}
 export interface DropdownButtonProps {
+  options: DropdownOption[];
 }
 
 @Component({
@@ -13,51 +20,89 @@ export class DropdownButton {
     this.setRef = this.setRef.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
   }
-  options: string[] = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5'];
-  refs: {[x: string]: HTMLElement} = {};;
+  refs: { [x: string]: HTMLElement } = {};;
+  _options: DropdownOption[] = [];
 
-  private setRef(el) {
-    el.addEventListener('click', this.handleLinkClick)
-    this.refs = { ...this.refs, [el.id]: el };
+  @Prop() options: DropdownOption[] | string = [];
+  @Watch('options')
+  optionsWatcher(newValue: DropdownOption[] | string) {
+    if (typeof newValue === 'string') {
+      this._options = JSON.parse(newValue);
+    } else {
+      this._options = newValue;
+    }
+  }
+  // We need to parse the JSON string for options
+  // Watch doesn't fire on initial load
+  componentWillLoad() {
+    this.optionsWatcher(this.options);
+  }
+  disconnectedCallback() {
+    // clean up event listeners
+    Object.values(this.refs).forEach((el: HTMLElement) => {
+      el.removeEventListener('click', this.handleLinkClick);
+    });
   }
 
-  private handleLinkClick(e) {
+  private setRef(el: HTMLElement) {
+    el.addEventListener('click', this.handleLinkClick)
+    const { target } = el.dataset;
+    this.refs = { ...this.refs, [target]: el };
+  }
+
+  // TODO: handle outside clicks to close menus
+  private handleLinkClick(e: MouseEvent) {
     e.preventDefault();
-    let refId = e.target.getAttribute('href');
-    if (!refId || refId.at(0) !== "#") return;
-    refId = refId.substring(1, refId.length);
-    const target = this.refs[refId];
-    if (target.getAttribute('aria-expanded') === 'false') {
-      target.setAttribute('aria-expanded', 'true');
-    } else {
-      target.setAttribute('aria-expanded', 'false');
+    // TODO: not sure if this is the proper type guard for this event
+    if (e.target instanceof HTMLElement) {
+      let refId = e.target.dataset.target;
+      if (!refId) return;
+      const target = this.refs[refId];
+      if (target.getAttribute('aria-expanded') === 'false') {
+        target.setAttribute('aria-expanded', 'true');
+      } else {
+        target.setAttribute('aria-expanded', 'false');
+      }
     }
   }
 
-  // private renderMenuItems() {
-  //   return this.options.map((option) => {
-  //     return <li>{option}</li>;
-  //   });
-  // }
+  private renderMenuItems(
+    level: number = 1,
+    options: DropdownOption[] = this._options) {
+    const olClass = level === 1 ? 'menu' : 'sub-menu';
+    return (
+      <ol
+        class={olClass}
+        data-target={`menuLvl${level}`}
+        ref={this.setRef}
+        aria-expanded="false">
+        {options.map((option: DropdownOption, index: number) => {
+          return (
+            <li key={`li-${option}-${index}`}>
+              <a
+                key={`a-${option}-${index}`}
+                //TODO: add ability to override href
+                href=""
+                data-target={option.children ? `menuLvl${level + 1}` : null}>{option.label}</a>
+              {option.children ? this.renderMenuItems(level + 1, option.children) : null}
+            </li>
+          );
+        })}
+      </ol>
+    )
+  }
 
   render() {
     return (
       <Host>
         <div class="dropdown-container">
-          <a id="button" class='select' href='#menuLvl1' ref={this.setRef}>Select an Option</a>
-          <ol id="menuLvl1" class="menu" aria-expanded="false" ref={this.setRef}>
-            {/* {this.renderMenuItems()} */}
-            <li><a href="">option 1</a></li>
-            <li><a href="">option 2</a></li>
-            <li><a href="#menuLvl2">option 3</a>
-              <ol id="menuLvl2" class="sub-menu" aria-expanded="false" ref={this.setRef}>
-                <li><a href="">option 1</a></li>
-                <li><a href="">option 2</a></li>
-                <li><a href="">option 3</a></li>
-              </ol>
-            </li>
-            <li><a href="">option 4</a></li>
-          </ol>
+          <a
+            id="button"
+            class='select'
+            href=""
+            data-target="menuLvl1"
+            ref={this.setRef}>Select an Option</a>
+          {this.renderMenuItems()}
         </div>
       </Host>
     );
