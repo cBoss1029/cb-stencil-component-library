@@ -55,8 +55,8 @@ export class DropdownButton {
   }
 
   private setRef(el: HTMLElement) {
-    const { target } = el.dataset;
-    this.refs = { ...this.refs, [target]: el };
+    const { destination } = el.dataset;
+    this.refs = { ...this.refs, [destination]: el };
   }
 
   // TODO: handle outside clicks to close menus
@@ -65,33 +65,33 @@ export class DropdownButton {
     // TODO: not sure if this is the proper type guard for this event
     if (e.target instanceof HTMLElement) {
       let isGoingBack = false;
-      // TODO: change name of data-target to something less confusing
-      let refId = e.target.dataset.target;
+      let refId = e.target.dataset.destination;
       if (!refId) return;
-      let target = this.refs[refId];
+      // The list element targeted by the element that was clicked
+      let destinationElement = this.refs[refId];
       let oldTarget = this.refs[refId];
-      
+
       const lastInHistory = this.history[this.history.length - 1];
-      if (lastInHistory && lastInHistory.level === parseInt(e.target.dataset.level) +1) {
+      if (lastInHistory && lastInHistory.level === parseInt(e.target.dataset.level) + 1) {
         isGoingBack = true;
-        target = this.refs[`menuLvl${e.target.dataset.level}`];
+        destinationElement = this.refs[`menuLvl${e.target.dataset.level}`];
       }
-      this.firstFocusableElement = target.querySelector(`[data-child="first"][data-level="${target.dataset.level}"]`);
-      this.lastFocusableElement = target.querySelector(`[data-child="last"][data-level="${target.dataset.level}"]`);
-      if (target.getAttribute('aria-expanded') === 'false') {
+      this.firstFocusableElement = destinationElement.querySelector(`[data-child="first"][data-level="${destinationElement.dataset.level}"]`);
+      this.lastFocusableElement = destinationElement.querySelector(`[data-child="last"][data-level="${destinationElement.dataset.level}"]`);
+      if (destinationElement.getAttribute('aria-expanded') === 'false') {
         // add to history
         this.history.push({
-          level: parseInt(target.dataset.level),
+          level: parseInt(destinationElement.dataset.level),
           element: e.target
         });
-        target.setAttribute('aria-expanded', 'true');
+        destinationElement.setAttribute('aria-expanded', 'true');
         this.firstFocusableElement.focus();
       } else {
-        if(isGoingBack) {
+        if (isGoingBack) {
           oldTarget.setAttribute('aria-expanded', 'false');
         }
-        if(!isGoingBack) {
-          target.setAttribute('aria-expanded', 'false');
+        if (!isGoingBack) {
+          destinationElement.setAttribute('aria-expanded', 'false');
         }
         this.history.pop();
       }
@@ -99,7 +99,7 @@ export class DropdownButton {
   }
 
   findLastFocusedElement() {
-    if(this.history.length > 0) {
+    if (this.history.length > 0) {
       const element = this.history[this.history.length - 1].element;
       return element;
     }
@@ -107,18 +107,17 @@ export class DropdownButton {
   }
 
   handleKeyUp(e: KeyboardEvent) {
-    if(e.key === 'Escape') {
+    if (e.key === 'Escape') {
       const lastFocusedElement = this.findLastFocusedElement();
       if (!lastFocusedElement) return;
-      // close all menus
       lastFocusedElement.focus();
       lastFocusedElement.click();
     }
-    if(e.key === 'Tab' && ! e.shiftKey && e.target === this.lastFocusableElement) {
+    if (e.key === 'Tab' && !e.shiftKey && e.target === this.lastFocusableElement) {
       e.preventDefault();
       this.firstFocusableElement.focus();
     }
-    if(e.key === 'Tab' && e.shiftKey &&  e.target === this.firstFocusableElement) {
+    if (e.key === 'Tab' && e.shiftKey && e.target === this.firstFocusableElement) {
       e.preventDefault();
       this.lastFocusableElement.focus();
     }
@@ -131,11 +130,11 @@ export class DropdownButton {
     return (
       <ol
         class={olClass}
-        data-target={`menuLvl${level}`}
+        data-destination={`menuLvl${level}`}
         ref={this.setRef}
         aria-expanded="false"
         data-level={`${level}`}
-        >
+      >
         {options.map((option: DropdownOption, index: number) => {
           const firstOrLast = index === 0 ? 'first' : index === options.length - 1 ? 'last' : '';
           return (
@@ -144,7 +143,7 @@ export class DropdownButton {
                 key={`a-${option}-${index}`}
                 //TODO: add ability to override href
                 href=""
-                data-target={option.children ? `menuLvl${level + 1}` : null}
+                data-destination={option.children ? `menuLvl${level + 1}` : null}
                 data-level={`${level}`}
                 data-child={firstOrLast}>{option.label}</a>
               {option.children ? this.renderMenuItems(level + 1, option.children) : null}
@@ -163,7 +162,7 @@ export class DropdownButton {
             id="button"
             class='select'
             href=""
-            data-target="menuLvl0"
+            data-destination="menuLvl0"
             data-level="0"
             ref={this.setRef}>Select an Option</a>
           {this.renderMenuItems()}
