@@ -37,15 +37,16 @@ export class DropdownButton {
   componentWillLoad() {
     this.optionsWatcher(this.options);
   }
+
   disconnectedCallback() {
     // clean up event listeners
-    Object.values(this.refs).forEach((el: HTMLElement) => {
-      el.removeEventListener('click', this.handleLinkClick);
-    });
+    const dropdownContainer = document.querySelector('.dropdown-container');
+    if (dropdownContainer) {
+      dropdownContainer.removeEventListener('click', this.handleLinkClick, {});
+    }
   }
 
   private setRef(el: HTMLElement) {
-    el.addEventListener('click', this.handleLinkClick)
     const { target } = el.dataset;
     this.refs = { ...this.refs, [target]: el };
   }
@@ -95,7 +96,7 @@ export class DropdownButton {
   render() {
     return (
       <Host>
-        <div class="dropdown-container">
+        <div class="dropdown-container" onClick={this.handleLinkClick}>
           <a
             id="button"
             class='select'
