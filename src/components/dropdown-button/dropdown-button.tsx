@@ -28,8 +28,8 @@ export class DropdownButton {
   refs: { [x: string]: HTMLElement } = {};;
   _options: DropdownOption[] = [];
   history: ClickHistory[] = [];
-  firstFocusableElement;
-  lastFocusableElement;
+  firstFocusableElement: HTMLElement;
+  lastFocusableElement: HTMLElement;
 
   @Prop() options: DropdownOption[] | string = [];
   @Watch('options')
