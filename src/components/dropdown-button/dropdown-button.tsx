@@ -28,6 +28,8 @@ export class DropdownButton {
   refs: { [x: string]: HTMLElement } = {};;
   _options: DropdownOption[] = [];
   history: ClickHistory[] = [];
+  firstFocusableElement;
+  lastFocusableElement;
 
   @Prop() options: DropdownOption[] | string = [];
   @Watch('options')
@@ -59,30 +61,46 @@ export class DropdownButton {
 
   // TODO: handle outside clicks to close menus
   private handleLinkClick(e: MouseEvent) {
-    console.log('clicked', e.target)
     e.preventDefault();
     // TODO: not sure if this is the proper type guard for this event
     if (e.target instanceof HTMLElement) {
+      let isGoingBack = false;
       // TODO: change name of data-target to something less confusing
       let refId = e.target.dataset.target;
       if (!refId) return;
-      const target = this.refs[refId];
+      let target = this.refs[refId];
+      let oldTarget = this.refs[refId];
+      
+      const lastInHistory = this.history[this.history.length - 1];
+      if (lastInHistory && lastInHistory.level === parseInt(e.target.dataset.level) +1) {
+        isGoingBack = true;
+        target = this.refs[`menuLvl${e.target.dataset.level}`];
+      }
+      this.firstFocusableElement = target.querySelector(`[data-child="first"][data-level="${target.dataset.level}"]`);
+      this.lastFocusableElement = target.querySelector(`[data-child="last"][data-level="${target.dataset.level}"]`);
       if (target.getAttribute('aria-expanded') === 'false') {
         // add to history
         this.history.push({
-          level: parseInt(e.target.dataset.level),
+          level: parseInt(target.dataset.level),
           element: e.target
         });
         target.setAttribute('aria-expanded', 'true');
+        this.firstFocusableElement.focus();
       } else {
-        target.setAttribute('aria-expanded', 'false');
+        if(isGoingBack) {
+          oldTarget.setAttribute('aria-expanded', 'false');
+        }
+        if(!isGoingBack) {
+          target.setAttribute('aria-expanded', 'false');
+        }
+        this.history.pop();
       }
     }
   }
 
   findLastFocusedElement() {
     if(this.history.length > 0) {
-      const { element } = this.history.pop();
+      const element = this.history[this.history.length - 1].element;
       return element;
     }
     return null;
@@ -96,20 +114,30 @@ export class DropdownButton {
       lastFocusedElement.focus();
       lastFocusedElement.click();
     }
+    if(e.key === 'Tab' && ! e.shiftKey && e.target === this.lastFocusableElement) {
+      e.preventDefault();
+      this.firstFocusableElement.focus();
+    }
+    if(e.key === 'Tab' && e.shiftKey &&  e.target === this.firstFocusableElement) {
+      e.preventDefault();
+      this.lastFocusableElement.focus();
+    }
   }
 
   private renderMenuItems(
-    level: number = 1,
+    level: number = 0,
     options: DropdownOption[] = this._options) {
-    const olClass = level === 1 ? 'menu' : 'sub-menu';
+    const olClass = level === 0 ? 'menu' : 'sub-menu';
     return (
       <ol
         class={olClass}
         data-target={`menuLvl${level}`}
         ref={this.setRef}
         aria-expanded="false"
+        data-level={`${level}`}
         >
         {options.map((option: DropdownOption, index: number) => {
+          const firstOrLast = index === 0 ? 'first' : index === options.length - 1 ? 'last' : '';
           return (
             <li key={`li-${option}-${index}`}>
               <a
@@ -117,7 +145,8 @@ export class DropdownButton {
                 //TODO: add ability to override href
                 href=""
                 data-target={option.children ? `menuLvl${level + 1}` : null}
-                data-level={option.children ? `${level}` : null}>{option.label}</a>
+                data-level={`${level}`}
+                data-child={firstOrLast}>{option.label}</a>
               {option.children ? this.renderMenuItems(level + 1, option.children) : null}
             </li>
           );
@@ -129,12 +158,12 @@ export class DropdownButton {
   render() {
     return (
       <Host>
-        <div class="dropdown-container" onClick={this.handleLinkClick} onKeyUp={this.handleKeyUp}>
+        <div class="dropdown-container" onClick={this.handleLinkClick} onKeyDown={this.handleKeyUp}>
           <a
             id="button"
             class='select'
             href=""
-            data-target="menuLvl1"
+            data-target="menuLvl0"
             data-level="0"
             ref={this.setRef}>Select an Option</a>
           {this.renderMenuItems()}
