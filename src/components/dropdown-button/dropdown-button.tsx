@@ -30,6 +30,7 @@ export class DropdownButton {
   history: ClickHistory[] = [];
   firstFocusableElement: HTMLElement;
   lastFocusableElement: HTMLElement;
+  outsideClickHandler: EventListener;
 
   @Prop() options: DropdownOption[] | string = [];
   @Watch('options')
@@ -44,14 +45,26 @@ export class DropdownButton {
   // Watch doesn't fire on initial load
   componentWillLoad() {
     this.optionsWatcher(this.options);
-  }
+    this.outsideClickHandler = (e: MouseEvent) => {
+      if (e.target instanceof HTMLElement) {
+        if (!e.target.closest('dropdown-button')) {
+          for(let key in this.refs) {
+            this.refs[key].setAttribute('aria-expanded', 'false');
+          }
 
+        }
+      }
+    }
+    document.addEventListener('click', this.outsideClickHandler);
+  }
+  
   disconnectedCallback() {
     // clean up event listeners
     const dropdownContainer = document.querySelector('.dropdown-container');
     if (dropdownContainer) {
       dropdownContainer.removeEventListener('click', this.handleLinkClick, {});
     }
+    document.removeEventListener('click', this.outsideClickHandler);
   }
 
   private setRef(el: HTMLElement) {
@@ -59,7 +72,6 @@ export class DropdownButton {
     this.refs = { ...this.refs, [destination]: el };
   }
 
-  // TODO: handle outside clicks to close menus
   private handleLinkClick(e: MouseEvent) {
     e.preventDefault();
     // TODO: not sure if this is the proper type guard for this event

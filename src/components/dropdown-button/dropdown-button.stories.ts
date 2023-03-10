@@ -7,7 +7,11 @@ export default {
 };
 
 // Note to self: don't use double quotes when passing a json string to the component
-const Template: Story<DropdownButtonProps> = (args) => `<dropdown-button options='${JSON.stringify(args.options)}'></dropdown-button>`;
+// Another note - outside click handler behaves weirdly when isolated in storybook so a wrapper div is needed
+const Template: Story<DropdownButtonProps> = (args) => `
+<div style="width: 100%; height: 600px; border: 2px solid blue; display: flex; flex-direction: column; justify-content: center; align-items: center">
+  <dropdown-button style="border: 2px solid yellow;" options='${JSON.stringify(args.options)}'></dropdown-button>
+</div>`;
 export const Example = Template.bind({});
 
 Example.args = {
