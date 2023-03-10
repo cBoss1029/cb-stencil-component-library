@@ -1,4 +1,5 @@
 import { Component, Host, h, Prop, Watch } from '@stencil/core';
+import ChevronDown from '../../assets/chevron-down.svg';
 
 export type DropdownOption = {
   label: string;
@@ -83,11 +84,13 @@ export class DropdownButton {
       let destinationElement = this.refs[refId];
       let oldTarget = this.refs[refId];
 
-      const lastInHistory = this.history[this.history.length - 1];
-      if (lastInHistory && lastInHistory.level === parseInt(e.target.dataset.level) + 1) {
+      const lastElementInHistory = this.history[this.history.length - 1];
+      // if last element in history is a level deeper than the current element, we know we're going back
+      if (lastElementInHistory && lastElementInHistory.level === parseInt(e.target.dataset.level) + 1) {
         isGoingBack = true;
         destinationElement = this.refs[`menuLvl${e.target.dataset.level}`];
       }
+      // these will be used to trap focus within the menu
       this.firstFocusableElement = destinationElement.querySelector(`[data-child="first"][data-level="${destinationElement.dataset.level}"]`);
       this.lastFocusableElement = destinationElement.querySelector(`[data-child="last"][data-level="${destinationElement.dataset.level}"]`);
       if (destinationElement.getAttribute('aria-expanded') === 'false') {
@@ -119,7 +122,9 @@ export class DropdownButton {
   }
 
   handleKeyUp(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
+    const escapeKeyValues = ['Escape', 'Esc'];
+    // back out a level if escape is pressed
+    if (escapeKeyValues.includes(e.key)) {
       const lastFocusedElement = this.findLastFocusedElement();
       if (!lastFocusedElement) return;
       lastFocusedElement.focus();
@@ -155,6 +160,7 @@ export class DropdownButton {
                 key={`a-${option}-${index}`}
                 //TODO: add ability to override href
                 href=""
+                aria-haspopup={option.children ? 'true' : 'false'}
                 data-destination={option.children ? `menuLvl${level + 1}` : null}
                 data-level={`${level}`}
                 data-child={firstOrLast}>{option.label}</a>
@@ -170,13 +176,14 @@ export class DropdownButton {
     return (
       <Host>
         <div class="dropdown-container" onClick={this.handleLinkClick} onKeyDown={this.handleKeyUp}>
-          <a
+          <button
             id="button"
             class='select'
-            href=""
+            type='button'
             data-destination="menuLvl0"
             data-level="0"
-            ref={this.setRef}>Select an Option</a>
+            ref={this.setRef}
+            aria-haspopup="true">Select an Option <img class="icon" alt="" src={ChevronDown}></img></button>
           {this.renderMenuItems()}
         </div>
       </Host>

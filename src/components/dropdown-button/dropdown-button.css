@@ -10,17 +10,44 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px solid greenyellow;
+  font-family: Verdana, Tahoma, sans-serif;
 }
 .select {
   min-width: 150px;
   width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: inherit;
+  padding: 10px;
+  background-color: #00A4B6;
+  color: #222222;
+  font-size: large;
+  font-weight: 700;
+}
+.dropdown-container ol a {
+  text-align: center;
+  background-color: #00A4B6;
+  color: #222222;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.select:focus {
+  outline: 5px solid rgb(0 90 156 / 75%);
+  background-color: #ffffff;
+}
+.dropdown-container ol a:focus{
+  outline: 5px solid rgb(0 90 156 / 75%);
+  background-color: #ffffff;
+  text-decoration: none;
+  z-index: 10;
+  position: relative;
 }
 ol {
   list-style: none;
   margin: 0;
   padding: 0;
-
 }
 .menu {
   width: 100%;
@@ -31,14 +58,13 @@ ol {
 .menu a {
   display: block;
   padding: 10px 1.5rem;
-  border: 2px solid red;
   text-decoration: none;
 }
 .sub-menu a {
   display: block;
   padding: 10px 1.5rem;
-  border: 2px solid red;
   text-decoration: none;
+  width: 7.5rem;
 }
 
 .sub-menu {
@@ -51,6 +77,41 @@ ol {
   position: relative;
 }
 
+.icon {
+  height: 1.4rem;
+  width: 1.4rem;
+  margin-left: 5px;
+}
+
+.menu[aria-expanded="true"] {
+  display: block;
+  animation: slideup 0.3s ease;
+}
+.sub-menu[aria-expanded="true"] {
+  display: block;
+  animation: slideleft 0.3s ease;
+}
 [aria-expanded="false"] {
   display: none;
+}
+
+@keyframes slideup {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slideleft {
+  0% {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
